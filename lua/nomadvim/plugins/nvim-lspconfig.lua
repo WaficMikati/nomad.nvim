@@ -1,33 +1,23 @@
 return {
-    -- nvim-lspconfig
-    {
-        "neovim/nvim-lspconfig",
-        dependencies = {
-            -- mason.nvim and mason-lspconfig.nvim for managing LSP servers
-            {"williamboman/mason.nvim"},
-            {"williamboman/mason-lspconfig.nvim"}
-        },
-        config = function()
-            -- Set up mason.nvim
-            require("mason").setup() -- Set up mason-lspconfig to automatically install LSP servers
-            require("mason-lspconfig").setup(
-                {
-                    ensure_installed = {"html", "cssls", "ts_ls"} -- Servers for HTML, CSS, JS/JSX
-                }
-            ) -- Configure LSP servers
-            local lspconfig = require("lspconfig")
-            -- HTML LSP
-            lspconfig.html.setup({})
-            -- CSS LSP
-            lspconfig.cssls.setup({})
-            -- TypeScript/JavaScript/JSX LSP
-            lspconfig.ts_ls.setup(
-                {
-                    init_options = {preferences = {importModuleSpecifierPreference = "non-relative"}},
-                    filetypes = {"javascript", "javascriptreact", "typescript", "typescriptreact"}
-                }
-            )
-        end
-    }
-}
+  "neovim/nvim-lspconfig",
+  dependencies = {
+    {"williamboman/mason.nvim"},
+    {"williamboman/mason-lspconfig.nvim"}
+  },
+  config = function()
+    require("mason").setup()
+    require("mason-lspconfig").setup({
+      ensure_installed = {"html", "cssls", "ts_ls"}
+    })
+    local lspconfig = require("lspconfig")
+    local capabilities = require("cmp_nvim_lsp").default_capabilities() -- Add this for nvim-cmp
 
+    lspconfig.html.setup({ capabilities = capabilities })
+    lspconfig.cssls.setup({ capabilities = capabilities })
+    lspconfig.ts_ls.setup({
+      capabilities = capabilities, -- Enable full LSP features
+      init_options = { preferences = { importModuleSpecifierPreference = "non-relative" } },
+      filetypes = {"javascript", "javascriptreact", "typescript", "typescriptreact"}
+    })
+  end
+}
