@@ -5,7 +5,7 @@ return {
     dependencies = {
       { "hrsh7th/cmp-nvim-lsp" },
       { "hrsh7th/cmp-buffer" },
-      { "hrsh7th/cmp-path" },
+      { "hrsh7th/cmp-path" }, -- Removed opts, as cmp-path has no setup
       {
         "L3MON4D3/LuaSnip",
         build = "make install_jsregexp",
@@ -24,6 +24,24 @@ return {
       },
       { "saadparwaiz1/cmp_luasnip" },
       { "onsails/lspkind.nvim" },
+      {
+        "windwp/nvim-autopairs",
+        config = function()
+          local autopairs = require("nvim-autopairs")
+          autopairs.setup({
+            check_ts = true,
+            ts_config = {
+              javascript = { "jsx", "javascriptreact" },
+              typescript = { "tsx", "typescriptreact" },
+            },
+          })
+          local cmp_autopairs = require("nvim-autopairs.completion.cmp")
+          require("cmp").event:on(
+            "confirm_done",
+            cmp_autopairs.on_confirm_done()
+          )
+        end,
+      },
     },
     config = function()
       local cmp = require("cmp")
@@ -41,7 +59,19 @@ return {
         mapping = cmp.mapping.preset.insert({
           ["<C-Space>"] = cmp.mapping.complete(),
           ["<C-e>"] = cmp.mapping.abort(),
-          ["<CR>"] = cmp.mapping.confirm({ select = false }),
+          ["<CR>"] = cmp.mapping({
+            i = function(fallback)
+              if cmp.visible() and cmp.get_active_entry() then
+                cmp.confirm({
+                  behavior = cmp.ConfirmBehavior.Insert,
+                  select = false,
+                })
+              else
+                fallback()
+              end
+            end,
+            s = cmp.mapping.confirm({ select = false }),
+          }),
           ["<Tab>"] = cmp.mapping(function(fallback)
             if cmp.visible() then
               cmp.select_next_item()
@@ -65,7 +95,15 @@ return {
           { name = "nvim_lsp", priority = 1000 },
           { name = "luasnip", priority = 750, option = { show_autosnippets = true } },
           { name = "buffer", priority = 500 },
-          { name = "path", priority = 250 },
+          {
+            name = "path",
+            priority = 250,
+            option = {
+              get_cwd = function()
+                return vim.fn.getcwd() -- Use project root for path completions
+              end,
+            },
+          },
         }),
         formatting = {
           format = lspkind.cmp_format({
@@ -78,7 +116,6 @@ return {
                 vim_item.kind = vim_item.kind or "Text"
                 vim_item.menu = string.format("[%s]", entry.source.name)
               end
-              -- Deduplicate by word
               vim_item.dup = 0
               return vim_item
             end,

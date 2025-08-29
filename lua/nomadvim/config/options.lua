@@ -6,6 +6,10 @@ local options = {
   expandtab = true,
   smartindent = true,
   signcolumn = 'yes',
+  wrap = true,
+  breakindent = true,
+  linebreak = true,
+  autochdir = true,
 }
 
 for key, value in pairs(options) do
